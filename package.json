@@ -1,0 +1,10 @@
+{
+  "name": "family-tree",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "本机优先的中文家谱与亲属称呼查询",
+  "scripts": { "start": "node server.js", "test": "node --test" },
+  "engines": { "node": ">=22" },
+  "dependencies": { "relationship.js": "1.2.9" }
+}

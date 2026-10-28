@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#245947">
+  <meta name="description" content="记录家人的故事，查询亲属称呼。资料保存在本机，可自定义保存文件夹。">
+  <title>枝 · 家谱 | 把家人连在一起</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/src/app.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="枝家谱首页"><span class="brand-icon" aria-hidden="true">枝</span><span>枝 · 家谱<small>OUR FAMILY, CONNECTED</small></span></a>
+    <div class="header-actions">
+      <span class="local-badge"><span aria-hidden="true">●</span> 本机保存 · 不上传</span>
+      <button id="storage-settings" class="button subtle" disabled>保存位置</button>
+      <button id="export" class="button subtle">导出备份</button>
+      <button id="import" class="button subtle">恢复备份</button>
+      <input id="import-file" type="file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow">一人一页，一家一谱</p><h1>把家人，连在一起。</h1><p class="muted">记下名字背后的故事，让每一次相见，都知道如何称呼。</p></div>
+      <div class="intro-meta"><strong id="member-count">0</strong><span>位家族成员</span><span class="divider"></span><div><span class="tiny-label">当前视角</span><label class="sr-only" for="self">我是谁</label><select id="self"><option value="">设置“我是谁”</option></select></div></div>
+    </section>
+    <nav class="family-bar panel" aria-label="家谱切换">
+      <div id="family-tabs" class="family-tabs"></div>
+      <div class="family-actions"><button id="new-family" class="button primary">＋ 新建家谱</button><button id="rename-family" class="button subtle">重命名</button><button id="delete-family" class="button danger">删除当前家谱</button></div>
+    </nav>
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <section class="relationship-panel" aria-labelledby="relationship-heading">
+      <div class="relationship-heading"><span class="round-icon" aria-hidden="true">↔</span><div><h2 id="relationship-heading">这个人，我该怎么叫？</h2><p>选择两位家人，查看彼此的称呼</p></div></div>
+      <div class="relationship-inputs"><label>从谁的角度<select id="from"><option value="">选择成员</option></select></label><button id="swap" class="button icon" aria-label="交换查询方向">⇄</button><label>想认识谁<select id="to"><option value="">选择成员</option></select></label></div>
+      <div id="relationship-result" class="relationship-result" aria-live="polite"><p>添加家人后，就可以查询称呼了。</p></div>
+    </section>
+    <div class="workspace">
+      <aside class="members-panel panel" aria-label="家族成员列表">
+        <div class="panel-heading"><h2>家族成员</h2><span id="filtered-count" class="count-pill">0</span></div>
+        <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索姓名、小名或备注" aria-label="搜索家族成员"></label>
+        <div id="members" class="members-list"></div>
+        <div class="sidebar-footer">点选成员，查看资料与关系<br>同名成员可通过小名和出生年份区分</div>
+      </aside>
+      <section class="tree-panel panel" aria-labelledby="tree-heading">
+        <div class="panel-heading tree-toolbar"><div><h2 id="tree-heading">我们的家谱</h2><span class="muted small">亲缘有迹，故事有根</span></div><button id="add" class="button primary">＋ 添加成员</button><div class="zoom-controls"><button id="zoom-out" aria-label="缩小家谱">−</button><output id="zoom-level" aria-label="缩放比例">100%</output><button id="zoom-in" aria-label="放大家谱">＋</button><button id="fit" aria-label="适应画布">适应</button></div></div>
+        <div id="tree-viewport" class="tree-viewport" tabindex="0" aria-label="家谱画布，可滚动浏览"><svg id="tree" role="group" aria-label="家族关系图" xmlns="http://www.w3.org/2000/svg"></svg><div id="empty" class="empty-state"><div class="empty-tree" aria-hidden="true">♧</div><h3>家谱，从一位家人开始</h3><p>先添加自己，再连接父母、配偶与子女。<br>不确定的资料可以留空，之后慢慢补全。</p><button id="start" class="button primary">添加第一位成员</button><button id="demo" class="button subtle">先看看示例家谱</button></div></div>
+        <div class="tree-legend"><span><i class="line"></i>亲生</span><span><i class="line dashed"></i>收养 / 继亲</span><span><i class="line spouse"></i>配偶</span><span><i class="line sibling"></i>手动兄弟姐妹</span><span class="legend-hint">点击节点查看资料 · 滚动查看分支</span></div>
+      </section>
+      <aside id="detail" class="detail-panel panel" aria-label="成员资料"><div class="detail-placeholder"><span aria-hidden="true">◇</span><h2>每个人，都有自己的故事</h2><p>从家谱或左侧列表中<br>选择一位家人。</p></div></aside>
+    </div>
+    <footer class="page-footer"><span id="storage-status">正在读取保存位置…</span><span>第一版 · 常见称呼供参考，家乡叫法可能不同</span></footer>
+  </main>
+  <dialog id="storage-dialog" aria-labelledby="storage-title">
+    <form id="storage-form">
+      <div class="dialog-heading"><h2 id="storage-title">数据保存位置</h2></div>
+      <div class="dialog-body">
+        <p class="muted small">当前保存位置</p><p id="storage-current" class="storage-path" aria-live="polite">正在读取…</p>
+        <label class="form-section">本机文件夹的完整路径<input id="storage-directory" required autocomplete="off" spellcheck="false" placeholder="例如 D:\家谱资料" aria-describedby="storage-help"></label>
+        <p id="storage-help" class="muted small">请先在电脑上创建文件夹，再粘贴完整路径。所有家谱统一保存为 family-tree-library.json；每次保存会保留上一版 .bak 备份，下次启动自动读取。</p>
+        <p class="muted small">更改位置会保留原资料。目标已有存档时，会询问是否打开，不会直接覆盖或合并。文件包含人物信息与照片，请选择可信的私人文件夹。</p>
+        <p id="storage-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-footer"><span class="spacer"></span><button id="cancel-storage" type="button" class="button subtle">取消</button><button id="storage-submit" type="submit" class="button primary">使用此文件夹</button></div>
+    </form>
+  </dialog>
+  <dialog id="family-name-dialog" aria-labelledby="family-name-title">
+    <form id="family-name-form">
+      <div class="dialog-heading"><h2 id="family-name-title">新建家谱</h2></div>
+      <div class="dialog-body"><label class="form-section">家谱名称<input id="family-name" required maxlength="60" autocomplete="off"></label><p class="muted small">各张家谱独立保存，新建不会清除已有资料。</p><p id="family-name-error" class="form-error" role="alert" hidden></p></div>
+      <div class="dialog-footer"><span class="spacer"></span><button id="cancel-family-name" type="button" class="button subtle">取消</button><button type="submit" class="button primary">保存</button></div>
+    </form>
+  </dialog>
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="person-form">
+      <div class="dialog-heading"><div><p class="eyebrow">FAMILY MEMBER</p><h2 id="editor-title">添加成员</h2></div><button type="button" id="close-editor" class="button icon" aria-label="关闭编辑">×</button></div>
+      <div class="dialog-body">
+        <div class="photo-editor"><div id="photo-preview" class="avatar large">人</div><div><label class="button subtle photo-label">选择照片<input id="photo-file" type="file" accept="image/jpeg,image/png,image/webp" aria-label="选择人物照片"></label><button type="button" id="remove-photo" class="button subtle">移除照片</button><p class="muted small">仅本机保存，自动压缩；支持 JPG / PNG / WebP</p></div></div>
+        <div class="form-grid">
+          <label>姓名 <span class="required">*</span><input name="name" required maxlength="60" autocomplete="off" placeholder="真实姓名"></label>
+          <label>小名 / 曾用名<input name="alias" maxlength="100" placeholder="家里人熟悉的叫法"></label>
+          <label>性别<select name="gender"><option value="unknown">暂不确定</option><option value="male">男</option><option value="female">女</option></select></label>
+          <label>居住城市 / 籍贯<input name="city" maxlength="100" placeholder="例如：杭州 · 浙江绍兴"></label>
+          <label>出生年月<input name="birth" maxlength="10" placeholder="1990 或 1990-05-21" inputmode="numeric"></label>
+          <label>去世年月<input name="death" maxlength="10" placeholder="在世或未知可留空" inputmode="numeric"></label>
+          <label class="full">职业<input name="occupation" maxlength="100" placeholder="可以留空"></label>
+        </div>
+        <section class="form-section"><div class="section-label"><h3>父母关系</h3><button type="button" id="add-parent" class="button subtle small">＋ 添加父母</button></div><p class="muted small">为当前成员选择父母；可分别记录亲生、收养和继亲关系。新增另一位家长后保存，会询问是否同时将两位设为配偶；取消只保存父母关系。</p><div id="parent-rows"></div></section>
+        <label class="form-section">配偶<select id="partners" multiple size="3" aria-describedby="partners-hint"></select><span id="partners-hint" class="muted small">只记录当前配偶。电脑按 Ctrl / Command 多选或取消；历史婚姻可写入备注。</span></label>
+        <label class="form-section">兄弟姐妹（手动关联）<span id="inferred-siblings" class="muted small"></span><select id="siblings" multiple size="3" aria-describedby="siblings-hint inferred-siblings"></select><span id="siblings-hint" class="muted small">父母未知时也可关联，不会自动补齐父母。电脑按 Ctrl / Command 多选或取消，保存后双方生效；其他亲缘需核实。</span></label>
+        <label class="form-section">备注与故事<textarea name="notes" rows="4" maxlength="5000" placeholder="记下重要经历、家庭习惯，或下次见面想聊的话题……"></textarea></label>
+        <p id="form-error" class="form-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-footer"><button id="delete-person" type="button" class="button danger" hidden>删除成员</button><span class="spacer"></span><button id="cancel-editor" type="button" class="button subtle">取消</button><button id="save-person" type="submit" class="button primary">保存成员</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,8 @@
+﻿node_modules/
+.vscode/
+.family-tree-storage.json*
+family-tree-library.json*
+.env
+.env.*
+!.env.example
+*.log
