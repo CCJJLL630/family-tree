@@ -123,9 +123,9 @@ function older(a, b) {
 
 export function describeRelationship(data, fromId, toId) {
   const byId = new Map(data.people.map(p => [p.id, p]));
-  const empty = { candidates: [], path: [], steps: [], alternatives: [], reasons: [] };
+  const empty = { candidates: [], path: [], steps: [], alternatives: [], reasons: [], daily: { title: '请选择两位成员', candidates: [], reasons: [] } };
   if (!byId.has(fromId) || !byId.has(toId)) return { ...empty, title: '请选择两位成员', status: 'unselected' };
-  if (fromId === toId) return { ...empty, title: '本人', candidates: ['本人'], path: [byId.get(fromId)], status: 'resolved' };
+  if (fromId === toId) return { ...empty, title: '本人', candidates: ['本人'], path: [byId.get(fromId)], status: 'resolved', daily: { title: '本人', candidates: ['本人'], reasons: [] } };
   const graph = new Map(data.people.map(p => [p.id, new Map()]));
   function edge(a, b, code, kind = 'biological') {
     const key = `${b}:${code}`, existing = graph.get(a).get(key);
@@ -151,13 +151,13 @@ export function describeRelationship(data, fromId, toId) {
       if (distance.get(e.id) === depth + 1) previous.get(e.id).push(e);
     }
   }
-  if (!distance.has(toId)) return { ...empty, title: '尚未找到亲属关系', status: 'disconnected' };
+  if (!distance.has(toId)) return { ...empty, title: '尚未找到亲属关系', status: 'disconnected', daily: { title: '建议称姓名', candidates: [], reasons: ['尚未找到亲属关系'] } };
   const alternatives = [], maxPaths = 32;
   const labels = { p: '父母', c: '子女', b: '兄弟姐妹', s: '配偶' };
   function collect(id, reversed) {
     if (alternatives.length > maxPaths) return;
     if (id === fromId) {
-      const steps = [...reversed].reverse().map(e => ({ ...e, label: (e.kind === 'adoptive' ? '收养·' : e.kind === 'step' ? '继亲·' : e.kind === 'manual' ? '手动·' : '') + labels[e.code] }));
+      const steps = [...reversed].reverse().map(e => ({ ...e, label: (e.kind === 'adoptive' ? '收养·' : e.kind === 'step' ? '继亲·' : '') + labels[e.code] }));
       const path = [byId.get(fromId), ...steps.map(e => byId.get(e.id))];
       alternatives.push({ ...resolveKinship(path, steps, older), path, steps });
     } else {
@@ -174,7 +174,12 @@ export function describeRelationship(data, fromId, toId) {
   const unresolved = alternatives.some(result => result.status !== 'resolved');
   const title = (candidates.length ? candidates.join('或') : alternatives[0].chain) + (reasons.length ? `（${reasons.join('；')}）` : '');
   const status = !truncated && alternatives.every(result => result.status === 'unsupported') ? 'unsupported' : truncated || unresolved || candidates.length > 1 ? 'uncertain' : 'resolved';
-  return { ...alternatives[0], title, candidates, reasons, alternatives, status };
+  const canSuggest = !truncated && alternatives.every(result => result.daily.candidates.length);
+  const dailyCandidates = canSuggest ? [...new Set(alternatives.flatMap(result => result.daily.candidates))] : [];
+  const dailyReasons = [...new Set([...alternatives.flatMap(result => result.daily.reasons), ...reasons])];
+  const daily = { candidates: dailyCandidates, reasons: dailyReasons,
+    title: dailyCandidates.length ? dailyCandidates.join('或') + (dailyReasons.length ? `（${dailyReasons.join('；')}）` : '') : '建议称姓名' };
+  return { ...alternatives[0], title, candidates, reasons, alternatives, status, daily };
 }
 
 function peerGroups(data, includeSpouses = false) {

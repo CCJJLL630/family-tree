@@ -24,7 +24,8 @@ test('manual siblings have directional titles without any parent records', () =>
   const data = fixture();
   assert.equal(family.describeRelationship(data, 'a', 'b').title, '姐姐');
   assert.equal(family.describeRelationship(data, 'b', 'a').title, '弟弟');
-  assert.deepEqual(family.describeRelationship(data, 'a', 'b').steps.map(s => s.label), ['手动·兄弟姐妹']);
+  assert.deepEqual(family.describeRelationship(data, 'a', 'b').steps.map(s => s.label), ['兄弟姐妹']);
+  assert.equal(family.describeRelationship(data, 'a', 'b').steps[0].kind, 'manual');
   for (const [gender, birth, expected] of [
     ['male', '1995', '哥哥'], ['male', '2005', '弟弟'], ['female', '2005', '妹妹'],
     ['female', '', '姐姐或妹妹（长幼待确认）'], ['female', '2000', '姐姐或妹妹（长幼待确认）'],

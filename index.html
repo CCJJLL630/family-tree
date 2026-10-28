@@ -45,7 +45,7 @@
       <section class="tree-panel panel" aria-labelledby="tree-heading">
         <div class="panel-heading tree-toolbar"><div><h2 id="tree-heading">我们的家谱</h2><span class="muted small">亲缘有迹，故事有根</span></div><button id="add" class="button primary">＋ 添加成员</button><div class="zoom-controls"><button id="zoom-out" aria-label="缩小家谱">−</button><output id="zoom-level" aria-label="缩放比例">100%</output><button id="zoom-in" aria-label="放大家谱">＋</button><button id="fit" aria-label="适应画布">适应</button></div></div>
         <div id="tree-viewport" class="tree-viewport" tabindex="0" aria-label="家谱画布，可滚动浏览"><svg id="tree" role="group" aria-label="家族关系图" xmlns="http://www.w3.org/2000/svg"></svg><div id="empty" class="empty-state"><div class="empty-tree" aria-hidden="true">♧</div><h3>家谱，从一位家人开始</h3><p>先添加自己，再连接父母、配偶与子女。<br>不确定的资料可以留空，之后慢慢补全。</p><button id="start" class="button primary">添加第一位成员</button><button id="demo" class="button subtle">先看看示例家谱</button></div></div>
-        <div class="tree-legend"><span><i class="line"></i>亲生</span><span><i class="line dashed"></i>收养 / 继亲</span><span><i class="line spouse"></i>配偶</span><span><i class="line sibling"></i>手动兄弟姐妹</span><span class="legend-hint">点击节点查看资料 · 滚动查看分支</span></div>
+        <div class="tree-legend"><span><i class="line"></i>亲生</span><span><i class="line dashed"></i>收养 / 继亲</span><span><i class="line spouse"></i>配偶</span><span><i class="line sibling"></i>兄弟姐妹</span><span class="legend-hint">点击节点查看资料 · 滚动查看分支</span></div>
       </section>
       <aside id="detail" class="detail-panel panel" aria-label="成员资料"><div class="detail-placeholder"><span aria-hidden="true">◇</span><h2>每个人，都有自己的故事</h2><p>从家谱或左侧列表中<br>选择一位家人。</p></div></aside>
     </div>
@@ -87,7 +87,7 @@
         </div>
         <section class="form-section"><div class="section-label"><h3>父母关系</h3><button type="button" id="add-parent" class="button subtle small">＋ 添加父母</button></div><p class="muted small">为当前成员选择父母；可分别记录亲生、收养和继亲关系。新增另一位家长后保存，会询问是否同时将两位设为配偶；取消只保存父母关系。</p><div id="parent-rows"></div></section>
         <label class="form-section">配偶<select id="partners" multiple size="3" aria-describedby="partners-hint"></select><span id="partners-hint" class="muted small">只记录当前配偶。电脑按 Ctrl / Command 多选或取消；历史婚姻可写入备注。</span></label>
-        <label class="form-section">兄弟姐妹（手动关联）<span id="inferred-siblings" class="muted small"></span><select id="siblings" multiple size="3" aria-describedby="siblings-hint inferred-siblings"></select><span id="siblings-hint" class="muted small">父母未知时也可关联，不会自动补齐父母。电脑按 Ctrl / Command 多选或取消，保存后双方生效；其他亲缘需核实。</span></label>
+        <label class="form-section">兄弟姐妹<span id="inferred-siblings" class="muted small"></span><select id="siblings" multiple size="3" aria-describedby="siblings-hint inferred-siblings"></select><span id="siblings-hint" class="muted small">父母未知时也可关联，不会自动补齐父母。电脑按 Ctrl / Command 多选或取消，保存后双方生效；其他亲缘需核实。</span></label>
         <label class="form-section">备注与故事<textarea name="notes" rows="4" maxlength="5000" placeholder="记下重要经历、家庭习惯，或下次见面想聊的话题……"></textarea></label>
         <p id="form-error" class="form-error" role="alert" hidden></p>
       </div>

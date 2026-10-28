@@ -133,7 +133,14 @@ function renderRelationship() {
   const a = data.people.find(p => p.id === from), b = data.people.find(p => p.id === to);
   const forward = describeRelationship(data, from, to), backward = describeRelationship(data, to, from);
   for (const [start, end, relationship] of [[a, b, forward], [b, a, backward]]) {
-    const line = element('p'); line.append(document.createTextNode(`${start.name}称呼${end.name}：`), element('strong', '', relationship.title)); result.append(line);
+    const direction = element('section', 'relationship-direction');
+    direction.setAttribute('aria-label', `${start.name}称呼${end.name}`);
+    direction.append(element('h3', '', `${start.name}称呼${end.name}`));
+    const line = element('p');
+    line.append(element('span', 'daily-label', '日常称呼建议'), element('strong', '', relationship.daily.candidates.join('或') || relationship.daily.title));
+    direction.append(line, element('p', 'path', `完整称谓：${relationship.title}`));
+    if (relationship.daily.reasons.length) direction.append(element('p', 'path', `建议说明：${relationship.daily.reasons.join('；')}`));
+    result.append(direction);
     if (relationship.path.length < 2) continue;
     const details = element('details');
     details.append(element('summary', 'path', `查看 ${relationship.alternatives.length} 条最短关系路径`));
@@ -141,9 +148,9 @@ function renderRelationship() {
       const path = alternative.path.map((p, i) => i ? `—${alternative.steps[i - 1].label}→ ${p.name}` : p.name).join(' ');
       details.append(element('div', 'path', path), element('div', 'path', `${alternative.chain} → ${alternative.title}`));
     }
-    result.append(details);
+    direction.append(details);
   }
-  if (forward.path.length > 1) result.append(element('div', 'path', '按已录入关系计算双向称呼；并列项是候选，不是已确定的唯一称呼。这里只检查最短路径，不穷举更长的多重亲缘；地方叫法可能不同。'));
+  if (forward.path.length > 1) result.append(element('div', 'path relationship-note', '日常称呼是按普通话习惯简化的建议，不代表实际亲缘更近；配偶方远亲可随配偶称呼，地方和家庭习惯可能不同。并列项是候选，无法可靠判断时建议称姓名。完整称谓与最短关系路径保留，不穷举更长的多重亲缘。'));
 }
 function renderTree() {
   const svg = $('tree'); svg.replaceChildren();
@@ -170,7 +177,7 @@ function renderTree() {
       d = `M${x1},${y1} C${x1 + 18},${y1} ${x2 - 18},${y2} ${x2},${y2}`;
     }
     const edge = svgElement('path', { d, class: `tree-edge${r.type === 'sibling' ? ' sibling' : r.type === 'spouse' ? ' partner' : r.kind !== 'biological' ? ' special' : ''}` });
-    if (r.type === 'sibling') edge.append(svgElement('title', {}, `${a.name}与${b.name}：手动关联的兄弟姐妹`));
+    if (r.type === 'sibling') edge.append(svgElement('title', {}, `${a.name}与${b.name}：兄弟姐妹`));
     svg.append(edge);
   }
   layout.nodes.forEach((p, index) => {
@@ -196,10 +203,14 @@ function renderDetail() {
   const p = data.people.find(p => p.id === selectedId), detail = $('detail'); detail.replaceChildren();
   if (!p) { const box = element('div', 'detail-placeholder'); box.append(element('span', '', '◇'), element('h2', '', '每个人，都有自己的故事'), element('p', '', '从家谱或成员列表中选择一位家人。')); detail.append(box); return; }
   const top = element('div', 'detail-top'); top.append(element('p', 'eyebrow', 'FAMILY PROFILE'), avatar(p, true), element('h2', '', p.name), element('div', 'alias', p.alias || '家族成员'));
-  if (data.selfId) top.append(element('span', 'relation-chip', `你称呼 TA：${describeRelationship(data, data.selfId, p.id).title}`));
+  if (data.selfId) {
+    const relationship = describeRelationship(data, data.selfId, p.id);
+    top.append(element('span', 'relation-chip', `你称呼 TA（日常建议）：${relationship.daily.candidates.join('或') || relationship.daily.title}`), element('p', 'path', `完整称谓：${relationship.title}`));
+    if (relationship.daily.reasons.length) top.append(element('p', 'path', `建议说明：${relationship.daily.reasons.join('；')}`));
+  }
   const body = element('div', 'detail-body'), dl = element('dl');
   const parents = data.relations.filter(r => r.type === 'parent' && r.to === p.id).map(r => `${data.people.find(x => x.id === r.from).name}（${{ biological: '亲生', adoptive: '收养', step: '继亲' }[r.kind]}）`).join('、');
-  const siblings = siblingsOf(data, p.id).map(link => `${data.people.find(x => x.id === link.id).name}（${describeRelationship(data, p.id, link.id).title} · ${link.automatic ? '共同父母' : '手动关联'}）`).join('、');
+  const siblings = siblingsOf(data, p.id).map(link => `${data.people.find(x => x.id === link.id).name}（${describeRelationship(data, p.id, link.id).title}）`).join('、');
   for (const [label, value] of [['出生', p.birth], ['去世', p.death], ['籍贯 / 城市', p.city], ['职业', p.occupation], ['父母', parents], ['兄弟姐妹', siblings]]) { dl.append(element('dt', '', label), element('dd', '', value || '未记录')); }
   const notes = element('div', 'detail-notes'); notes.append(element('h3', '', '备注与故事'), element('p', '', p.notes || '还没有故事。可以从一次家庭聚会记起。'));
   const actions = element('div', 'detail-actions');
